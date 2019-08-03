@@ -31,7 +31,16 @@ def get_item_by_itemid(item_id, remove_id=False):
     return item
 
 
+def get_one_raw_item():
+    pass
+
+
 def save_item(item):
+    '''
+    Now it handle upsert by self implemented logic. Should use pymongo upsert to do that.
+    :param item:
+    :return:
+    '''
     logger.debug(item)
     item_id = item["item_id"]
     logger.info(item_id)
@@ -39,12 +48,12 @@ def save_item(item):
     logger.info(existing_item)
     if existing_item:
         tools.update_dictionary_value(item, existing_item)
-        existing_item['update_time'] = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        existing_item['update_time'] = datetime.utcnow()# .strftime("%Y%m%d%H%M%S")
         to_save_item = existing_item
         mongo_processor = mongo.update
         # mongo.update(user)
     else:
-        item['update_time'] = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        item['update_time'] = datetime.utcnow()# .strftime("%Y%m%d%H%M%S")
         to_save_item = item
         mongo_processor = mongo.insert
         # mongo.insert(user)

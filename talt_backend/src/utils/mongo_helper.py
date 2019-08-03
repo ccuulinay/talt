@@ -35,7 +35,14 @@ def insert(item, collection=MONGO_COLLECTION):
     if isinstance(item, list):
         c.insert_many(item)
     else:
-        c.insert(item)
+        c.insert_one(item)
+
+
+@reconnect
+def updateFieldsByQuery(query, fields, collection=MONGO_COLLECTION):
+    c = mongo[collection]
+    updateSet = {"$set": fields}
+    c.update_one(query, updateSet, upsert=True)
 
 
 @reconnect
@@ -43,6 +50,12 @@ def updateFields(id, fields, collection=MONGO_COLLECTION):
     c = mongo[collection]
     query = {"$set": fields}
     c.update_one({'_id': id}, query, upsert=True)
+
+
+@reconnect
+def updateByQuery(query, item, collection=MONGO_COLLECTION):
+    c = mongo[collection]
+    c.update(query, item, upsert=True)
 
 
 @reconnect
