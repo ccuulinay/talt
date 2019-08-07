@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 
 
-def get_item_by_id(post_id, remove_id=False):
+def get_item_by_id(post_id, remove_id=True):
     try:
         item = mongo.getbyID(ObjectId(post_id))
     except Exception as e:
@@ -18,7 +18,7 @@ def get_item_by_id(post_id, remove_id=False):
     return item
 
 
-def get_item_by_itemid(item_id, remove_id=False):
+def get_item_by_itemid(item_id, remove_id=True):
     try:
         query_body = {"item_id": str(item_id)}
         item = mongo.find_one(query_body, MONGO_COLLECTION)
@@ -31,8 +31,18 @@ def get_item_by_itemid(item_id, remove_id=False):
     return item
 
 
-def get_one_raw_item():
-    pass
+def get_one_raw_item(remove_id=True):
+    try:
+        query_body = {"status": "raw"}
+        item = mongo.find_one(query_body, MONGO_COLLECTION)
+        mongo.updateFields(item['_id'], {"status": "reviewing"})
+    except Exception as e:
+        logger.error(e)
+        raise e
+    if item:
+        if remove_id:
+            item.pop("_id")
+    return item
 
 
 def save_item(item):

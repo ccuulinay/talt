@@ -36,8 +36,16 @@ class Ping(Resource):
         return "pong with {}".format(str(", ".join(args_list)))
 
 
-@api.route("/data/save_one")
-class DataSaveOne(Resource):
+@api.route("/data/text")
+class TextDataOne(Resource):
+    def get(self):
+        args = request.args
+        logger.debug(args)
+
+        item = data_item.get_one_raw_item()
+
+        return jsonify(item)
+
     def post(self):
         json_data = request.json
         if 'payload' in json_data:
@@ -50,27 +58,6 @@ class DataSaveOne(Resource):
         else:
             logger.warning("No payload in post json data.")
             return "Not here."
-
-
-@api.route("/data/get_one")
-class DataSaveOne(Resource):
-    def get(self):
-        args = request.args
-        logger.debug(args)
-        #TODO Handle get one data item to be label and review and send to frontend.
-
-        dump_data = {
-            "_id": "fake00001"
-            , "type": "text"
-            , "data": {
-                "content": "This is a item to be label."
-                , "class": "testing"
-                , "tags": [
-                    "testing"
-                ]
-            }
-        }
-        return jsonify(dump_data)
 
 
 if __name__ == "__main__":
