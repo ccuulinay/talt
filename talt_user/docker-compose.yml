@@ -1,0 +1,15 @@
+version: '3.1'
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "31864:27017"
+    volumes:
+      - db-data:/var/lib/mongodb/data
+    environment:
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: root.123
+      MONGO_INITDB_DATABASE: talt_user
+volumes:
+  db-data:
