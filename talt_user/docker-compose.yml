@@ -11,5 +11,17 @@ services:
       # MONGO_INITDB_ROOT_USERNAME: root
       # MONGO_INITDB_ROOT_PASSWORD: root.123
       MONGO_INITDB_DATABASE: talt_user
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "31863:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - 'redis_data:/var/redis/data'
 volumes:
   db-data:
+  redis_data:
