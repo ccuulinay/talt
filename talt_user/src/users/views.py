@@ -1,5 +1,5 @@
 from flask  import request
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, marshal
 from src import api
 from src.users.models import user_request, user, user_base
 from src.users.service import UserService
@@ -19,7 +19,8 @@ class Users(Resource):
 
         :return:
         """
-        user_service.signup(api.payload)
+        payload = marshal(api.payload, user_request)
+        user_service.signup(payload)
         return {'status': 'Signed up Successfully', 'status_code': 200}
 
 

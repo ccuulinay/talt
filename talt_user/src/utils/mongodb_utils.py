@@ -72,3 +72,31 @@ class MongoBase(object):
             print('Exception while deleting records in  MongoDB', e)
             logger.debug('Exception while deleting records in MongoDB as exception: {}'.format(e))
 
+    @reconnect
+    def aggregate(self, collection_name, query_list):
+        """
+        For example:
+        db.rooms.aggregate([
+           {
+              $project: {
+                 tasks: {
+                    $filter: {
+                       input: "$tasks",
+                       as: "task",
+                       cond: { $and: [{$eq: ["$$task.meta.is_archived", false]}, {$eq: ["$$task.meta.is_deleted", false]}] }
+                    }
+                 }
+              }
+           }
+        ])
+
+        :param collection_name:
+        :param query_list:
+        :return:
+        """
+        try:
+            cursor = self.mongo_db[collection_name].aggregate(query_list)
+            return list(cursor)
+        except Exception as e:
+            print('Exception while aggregating  MongoDB', e)
+            logger.debug('Exception while aggregating in MongoDB')
