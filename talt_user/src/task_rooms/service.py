@@ -1,10 +1,14 @@
 from bson import ObjectId
+from flask_restplus import abort
+from flask_jwt_extended import get_jwt_identity
 from src.task_rooms.models import room_request, room_record
 from src.utils.mongodb_utils import MongoBase as Base
 from src.utils.helper import custom_marshal, update_common_payload
 from src.common.constants import COLLECTIONS
+from src import logger
 
 base_obj = Base()
+
 
 class TaskRoomService(object):
     """
@@ -44,7 +48,14 @@ class TaskRoomService(object):
         :return:
         """
         payload = custom_marshal(payload, room_request, 'update')
-        base_obj.update(COLLECTIONS['ROOMS'], {"_id": ObjectId(id)}, {"$set": payload})
+        email = get_jwt_identity()
+        result = base_obj.update(COLLECTIONS['ROOMS']
+                                 , {"_id": ObjectId(id), "meta.created_by": email}
+                                 , {"$set": payload})
+
+        if not result.modified_count:
+            abort(401, "Unauthorized")
+        logger.debug(result.modified_count)
 
     def archive_room(self, id):
         """
@@ -53,9 +64,14 @@ class TaskRoomService(object):
         :return:
         """
         payload = update_common_payload()
+        email = get_jwt_identity()
         payload["meta.is_archived"], payload["meta.is_deleted"] = True, False
-        base_obj.update(COLLECTIONS['ROOMS'], {"_id": ObjectId(id)},
-                        {"$set": payload})
+        result = base_obj.update(COLLECTIONS['ROOMS']
+                        , {"_id": ObjectId(id), "meta.created_by": email}
+                        , {"$set": payload})
+        if not result.modified_count:
+            abort(401, "Unauthorized")
+        logger.debug(result.modified_count)
 
     def delete_room(self, id):
         """
@@ -64,9 +80,14 @@ class TaskRoomService(object):
         :return:
         """
         payload = update_common_payload()
+        email = get_jwt_identity()
         payload["meta.is_archived"], payload["meta.is_deleted"] = False, True
-        base_obj.update(COLLECTIONS['ROOMS'], {"_id": ObjectId(id)},
-                        {"$set": payload})
+        result = base_obj.update(COLLECTIONS['ROOMS']
+                                 , {"_id": ObjectId(id), "meta.created_by": email}
+                                 , {"$set": payload})
+        if not result.modified_count:
+            abort(401, "Unauthorized")
+        logger.debug(result.modified_count)
 
     def change_status(self, id):
         """
@@ -75,6 +96,43 @@ class TaskRoomService(object):
         :return:
         """
         payload = update_common_payload()
+        email = get_jwt_identity()
         payload["meta.is_archived"], payload["meta.is_deleted"] = False, False
+        result = base_obj.update(COLLECTIONS['ROOMS']
+                                 , {"_id": ObjectId(id), "meta.created_by": email}
+                                 , {"$set": payload})
+        if not result.modified_count:
+            abort(401, "Unauthorized")
+        logger.debug(result.modified_count)
+
+    def invite_user(self, id, email):
+        """
+        Invite User to the task room
+        :param id:
+        :param email:
+        :return:
+        """
+        creator_email = get_jwt_identity()
+        count, records = base_obj.get(COLLECTIONS['USERS'], {'email': email, "meta.is_deleted": False})
+        if count == 1:
+            if records[0]['is_activte']:
+                result = base_obj.update(COLLECTIONS['ROOMS']
+                                         , {"_id": ObjectId(id), "meta.created_by": creator_email}
+                                         , {"$push": {"user": email}})
+                if not result.modified_count:
+                    abort(401, "Unauthorized")
+            else:
+                abort(401, "Email ID is not active")
+        else:
+            abort(404, "Email ID does not exist")
+
+    def exit_task_room(self, id, email):
+        """
+        Exit from a task room
+        :param id:
+        :param email:
+        :return:
+        """
         base_obj.update(COLLECTIONS['ROOMS'], {"_id": ObjectId(id)},
-                        {"$set": payload})
+                        {"$pull": {'users': email}})
+
