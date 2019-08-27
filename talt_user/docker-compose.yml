@@ -22,6 +22,21 @@ services:
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     volumes:
       - 'redis_data:/var/redis/data'
+
+  talt_user:
+    build: .
+    ports:
+      - "31865:5000"
+    volumns:
+      - .:/src
+    environment:
+      - REDIS_HOST=redis
+      - DB_HOST=mongo
+      - MAIL_USER=
+      - MAIL_PASSWORD=
+    depends_on:
+      - redis
+      - mongo
 volumes:
   db-data:
   redis_data:
